@@ -1,0 +1,16 @@
+__pycache__/
+.idea/
+.vscode/
+
+dsacstar/build/
+dsacstar/dist/
+dsacstar/dsacstar.egg-info/
+
+# Dataset files.
+datasets/7scenes*
+datasets/mip360*
+datasets/t2*
+split_files/
+
+# Outputs.
+results_*/
