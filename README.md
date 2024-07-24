@@ -370,6 +370,9 @@ bash scripts/reconstruct_7scenes_warmstart.sh
 python scripts/show_benchmark_results.py results_7scenes_warmstart_benchmark
 ```
 
+For some experiments in the paper (see right side of Table 1), we run ACE0 and baselines on a subset of images for each scene.
+We provide the lists of images, together with how they have been split for the view synthesis benchmark here: [200 images per scene](https://storage.googleapis.com/niantic-lon-static/research/acezero/splits_7s_200frames.tar.gz) and [50 images per scene](https://storage.googleapis.com/niantic-lon-static/research/acezero/splits_7s_50frames.tar.gz).
+
 ### Mip-NeRF 360
 
 Setup the dataset.
