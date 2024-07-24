@@ -17,6 +17,8 @@ if __name__ == '__main__':
                         help='Pattern relative to working directory to glob for images')
     parser.add_argument('--split_json', type=str, required=False,
                         help='Path to a JSON file containing splits; if not given, every 8 images will be test images')
+    parser.add_argument('--no_run_nerfstudio', action='store_true',
+                        help='If given, the script will generate Nerfstudio input files but not run Nerfstudio')
     args = parser.parse_args()
 
 
@@ -25,4 +27,5 @@ if __name__ == '__main__':
         working_dir=Path(args.output_dir),
         split_json=Path(args.split_json) if args.split_json else None,
         images_glob_pattern=args.images_glob_pattern,
+        dry_run=args.no_run_nerfstudio,
     )

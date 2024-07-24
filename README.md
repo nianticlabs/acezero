@@ -104,6 +104,7 @@ Camera poses are world-to-camera transformations, using the OpenCV camera conven
 If the confidence is less than 1000, it should be treated as unreliable and possibly ignored.
 
 The pose files can be used e.g. to train a Nerfacto model, using our benchmarking scripts, see [Benchmarking](#nerfacto-benchmark).
+Our benchmarking scripts also allow you to only convert our pose files to the format required by Nerfstudio, without running the benchmark itself.
 
 <details>
 <summary>Other content of the result folder explained.</summary>
@@ -297,7 +298,9 @@ To setup the benchmark, follow the instructions in the [Benchmark README](benchm
 
 Note that the benchmark lives in its own conda environment, so you have to change environments between reconstruction and benchmarking.
 
-The benchmark takes an ACE0 pose file and fits a Nerfacto model. By default, it will apply a 1/8 split of the images to calculate PSNR.
+The benchmark takes an ACE0 pose file and fits a Nerfacto model. Optionally, you can also use our benchmarking scripts to generate the input files for Nerfstudio without running the benchmark, see the `--no_run_nerfstudio` flag.
+
+If you do run the benchmark, it will apply a 1/8 split of the images by default to calculate PSNR.
 The scripts we provide for our [Paper Experiments](#paper-experiments) do optionally run the benchmark on each dataset using the correct split.
 
 Since the benchmarking results are stored in a nested structure, we provide a script to extract the PSNR values:

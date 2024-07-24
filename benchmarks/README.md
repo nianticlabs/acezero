@@ -19,6 +19,8 @@ These are:
 - A confidence score for the pose. If it is less than 1000, the pose will be excluded from the NeRF training set (but not the test set).
 
 `--output_dir`: Output directory for the benchmark. Downsampled images, NeRFs and evaluation scores will be written to this dir.
+Will also contain Nerfstudio input data -- in particular a standard Nerfstudio transforms.json containing poses in OpenGL cam-to-world format,
+and possibly an images directory containing downsampled images (if downsampling was performed).
 
 `--images_glob_pattern`: Defines the set of images used in the dataset. Must be given as a glob pattern relative to the current working directory, e.g. `--images_glob_pattern '/path/to/dataset/*.jpg'`. (Note that the single quotes are important to prevent the glob being expanded prematurely by your shell!)
 
@@ -30,6 +32,8 @@ These are:
 }
 ```
 If not given, a default split will be used in which every 8th frame (after sorting them alphabetically on their paths) will form the test set.
+
+`--no_run_nerfstudio`: Optional argument. If given, will stop after generating Nerfstudio inputs without actually running Nerfstudio or conducting the evaluation. Useful if you just want to convert your ACE0-format pose file to Nerfstudio input format, rather than evaluating the pose quality.
 
 After the eval runs, there will be an evaluation JSON in the output dir containing PSNR (and other metrics). The output structure is quite nested:
 `$OUTPUT_DIR/nerf_data/nerf_for_eval/nerfacto/run/eval.json`
