@@ -519,6 +519,14 @@ In this case, ACE0 will use the provided depth maps for the seed images instead 
 Otherwise, the functions `get_depth_model()` and `estimate_depth()` in `dataset_io.py` can be adapted to use a depth estimator other than ZoeDepth.
 Note that we found the impact of the depth estimation model to be rather small in our experiments.
 
+**Q: Is ACE0 able to reconstruct from a small set of sparse views?**
+
+**A:** It can work but this scenario is challenging for ACE0. 
+We expect other methods, and even COLMAP, to work much better in this case.
+ACE0 relies on images having sufficient visual overlap, particularly when registering new images to the reconstruction.
+You can lower the registration threshold when running `ace_zero.py` via `--registration_confidence` setting it to 300 or 100 - but at some point ACE0 will get unstable.
+ACE0 shines if you have dense coverage of a scene, and reconstruct it from many images in reasonable time.
+
 ## Publications
 
 If you use ACE0 or parts of its code in your own work, please cite:
