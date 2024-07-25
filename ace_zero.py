@@ -156,6 +156,14 @@ if __name__ == '__main__':
     _logger.info(f"Starting reconstruction of files matching {opt.rgb_files}.")
     reconstruction_start_time = time.time()
 
+    # We warm up the torch.hub cache and make sure the depth estimation model is available 
+    # before we start the main ACE0 loop (ACE0 uses multiple processes for the initial seed
+    # stage and the download should run only once).
+    _logger.info(f"Downloading ZoeDepth model from the main process.")
+    model = dataset_io.get_depth_model()
+    del model
+    _logger.info(f"Depth estimation model ready to use.")
+
     if opt.seed_network is not None:
         _logger.info(f"Using pre-trained network as seed: {opt.seed_network}")
         iteration_id = opt.seed_network.stem

@@ -68,6 +68,11 @@ cd ..
 
 Having done the steps above, you are ready to experiment with ACE0!
 
+**Important note:** the first time you run ACE0, the script may ask you to confirm that you are happy to download the ZoeDepth depth estimation code and its pretrained weights from GitHub.
+See [this link](https://github.com/isl-org/ZoeDepth) for its license and details.
+ACE0 uses that model to estimate the depth for the seed images.
+It can be replaced, please see the [FAQ](#frequently-asked-questions) section below for details.
+
 ## Usage
 
 We explain how to run ACE0 to reconstruct images from scratch, with and without knowledge about the image intrinsics.

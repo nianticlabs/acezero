@@ -195,17 +195,17 @@ def get_depth_model(init=False):
     """
 
     # Warm up dependency in the torch hub cache.
-    torch.hub.help("intel-isl/MiDaS", "DPT_BEiT_L_384", force_reload=init)
+    torch.hub.help("intel-isl/MiDaS", "DPT_BEiT_L_384", force_reload=init, trust_repo="check")
     repo = "isl-org/ZoeDepth"
 
     # # Zoe_N
-    # model_zoe_n = torch.hub.load(repo, "ZoeD_N", pretrained=True, force_reload=init)
+    # model_zoe_n = torch.hub.load(repo, "ZoeD_N", pretrained=True, force_reload=init, trust_repo="check")
 
     # # Zoe_K
-    # model_zoe_k = torch.hub.load(repo, "ZoeD_K", pretrained=True, force_reload=init)
+    # model_zoe_k = torch.hub.load(repo, "ZoeD_K", pretrained=True, force_reload=init, trust_repo="check")
 
     # Zoe_NK (best performing model).
-    model_zoe_nk = torch.hub.load(repo, "ZoeD_NK", pretrained=True, force_reload=init)
+    model_zoe_nk = torch.hub.load(repo, "ZoeD_NK", pretrained=True, force_reload=init, trust_repo="check")
     model_zoe_nk.eval().cuda()
     _logger.info(f"Loaded pretrained ZoeDepth model.")
 
