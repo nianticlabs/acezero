@@ -329,7 +329,8 @@ If your images are not sequential, try ` --order-poses True`.
 
 ## Paper Experiments
 
-We provide scripts to run the main experiments of the paper. 
+We provide scripts to run the main experiments of the paper.
+We also provide pre-computed results for all these experiments, along with the corresponding visualizations, in the respective sections below.
 
 ### 7-Scenes
 
@@ -375,6 +376,9 @@ bash scripts/reconstruct_7scenes_warmstart.sh
 python scripts/show_benchmark_results.py results_7scenes_warmstart_benchmark
 ```
 
+Find pre-computed poses and reconstruction videos for 7-Scenes [here](https://storage.googleapis.com/niantic-lon-static/research/acezero/results_ace0_7scenes.tar.gz). 
+These results are from a different run of ACE0 than the one we used for the paper results, but PSNR values are very close (&plusmn; 0.1dB PSNR on average).
+
 For some experiments in the paper (see right side of Table 1), we run ACE0 and baselines on a subset of images for each scene.
 We provide the lists of images, together with how they have been split for the view synthesis benchmark here: [200 images per scene](https://storage.googleapis.com/niantic-lon-static/research/acezero/splits_7s_200frames.tar.gz) and [50 images per scene](https://storage.googleapis.com/niantic-lon-static/research/acezero/splits_7s_50frames.tar.gz).
 
@@ -413,6 +417,9 @@ To show the benchmarking results, call:
 ```shell
 python scripts/show_benchmark_results.py results_mip360_benchmark
 ```
+
+Find pre-computed poses and reconstruction videos for the Mip-NerF 360 dataset [here](https://storage.googleapis.com/niantic-lon-static/research/acezero/results_ace0_mip360.tar.gz). 
+These results are from a different run of ACE0 than the one we used for the paper results, but PSNR values are very close (&plusmn; 0.1dB PSNR on average).
 
 ### Tanks and Temples
 
@@ -484,6 +491,9 @@ Note that the last experiment assumes that you set up the dataset with `--with-c
 The code will first call ACE mapping on the images with COLMAP poses to create an initial scene model.
 This model is then passed to ACE0 which will use it as a seed for the full video reconstruction.
 In this example, we trust the focal length estimate of COLMAP and keep it fixed throughout the reconstruction.
+
+Find pre-computed poses and reconstruction videos for Tanks and Temples here: [Training scenes](https://storage.googleapis.com/niantic-lon-static/research/acezero/results_ace0_t2_training.tar.gz), [Intermediate scenes](https://storage.googleapis.com/niantic-lon-static/research/acezero/results_ace0_t2_intermediate.tar.gz), [Advanced scenes](https://storage.googleapis.com/niantic-lon-static/research/acezero/results_ace0_t2_advanced.tar.gz). 
+These results are from a different run of ACE0 than the one we used for the paper results, but PSNR values are very close (&plusmn; 0.3dB PSNR on average).
 
 ## Frequently Asked Questions
 
