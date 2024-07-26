@@ -18,9 +18,9 @@ dependencies:
   - brunsli=0.1=h2531618_0
   - bzip2=1.0.8=h7b6447c_0
   - c-ares=1.19.0=h5eee18b_0
-  - ca-certificates=2023.01.10=h06a4308_0
+  - ca-certificates=2024.7.2=h06a4308_0
   - cairo=1.16.0=h6cf1ce9_1008
-  - certifi=2022.12.7=py38h06a4308_0
+  - certifi=2024.7.4=py38h06a4308_0
   - cffi=1.15.1=py38h5eee18b_3
   - cfitsio=3.470=h5893167_7
   - charls=2.2.0=h2531618_0
@@ -40,7 +40,7 @@ dependencies:
   - dataclasses=0.8=pyhc8e2a94_3
   - dbus=1.13.6=h48d8840_2
   - expat=2.4.8=h27087fc_0
-  - ffmpeg=4.3=hf484d3e_0
+  - ffmpeg=4.3.2=hca11adc_0
   - filelock=3.9.0=py38h06a4308_0
   - flit-core=3.8.0=py38h06a4308_0
   - fontconfig=2.14.0=h8e229c2_0
@@ -154,7 +154,7 @@ dependencies:
   - opencv=4.4.0=py38_2
   - openh264=2.1.1=h4ff587b_0
   - openjpeg=2.4.0=h3ad879b_0
-  - openssl=1.1.1t=h7f8727e_0
+  - openssl=1.1.1w=h7f8727e_0
   - packaging=23.0=py38h06a4308_0
   - partd=1.2.0=pyhd3eb1b0_1
   - pcre=8.45=h9c3ff4c_0
@@ -201,7 +201,7 @@ dependencies:
   - typing_extensions=4.4.0=py38h06a4308_0
   - urllib3=1.26.14=py38h06a4308_0
   - wheel=0.38.4=py38h06a4308_0
-  - x264=1!157.20191217=h7b6447c_0
+  - x264=1!161.3030=h7f98852_1
   - xorg-kbproto=1.0.7=h7f98852_1002
   - xorg-libice=1.0.10=h7f98852_0
   - xorg-libsm=1.2.3=hd9c2040_1000

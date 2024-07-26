@@ -337,7 +337,12 @@ if __name__ == '__main__':
                        ])
 
         _logger.info("Converting to video.")
-        zutil.run_cmd(["/usr/bin/ffmpeg",
+
+        # get ffmpeg path
+        ffmpeg_path = shutil.which("ffmpeg")
+
+        # run ffmpeg to convert the rendered images to a video
+        zutil.run_cmd([ffmpeg_path,
                        "-y",
                        "-framerate", 30,
                        "-pattern_type", "glob",
