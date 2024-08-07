@@ -7,6 +7,7 @@ dsacstar/dist/
 dsacstar/dsacstar.egg-info/
 
 # Dataset files.
+data
 datasets/7scenes*
 datasets/mip360*
 datasets/t2*
