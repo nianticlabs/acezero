@@ -12,7 +12,7 @@ Posing of Image Collections via Incremental Learning of a Relocalizer**
 > [Daniyar Turmukhambetov](https://dantkz.github.io/about/), and 
 > [Victor Adrian Prisacariu](https://www.robots.ox.ac.uk/~victor/)
 > 
-> ECCV 2024
+> ECCV 2024, Oral
 
 For further information please visit:
 
