@@ -24,13 +24,14 @@ def export_point_cloud_from_nerfstudio(config_path: Path, output_folder: Path) -
 
 
 def fit_nerf_with_nerfstudio(nerf_data_path: Path, downscale_factor: Optional[int] = 1,
-                             preload_images: bool = False, ns_train_extra_args: Optional[Dict] = None) -> Path:
+                             preload_images: bool = False, ns_train_extra_args: Optional[Dict] = None,
+                             method: str = 'nerfacto', camera_optimizer: str = 'off') -> Path:
     ns_train_extra_args = ns_train_extra_args or {}
 
     # Build command
     # Check output dir doesn't already exist
     # Nerfstudio unfortunately forces this deeply nested directory structure on us:
-    output_dir = nerf_data_path / 'nerf_for_eval' / 'nerfacto' / 'run'
+    output_dir = nerf_data_path / 'nerf_for_eval' / method / 'run'
 
     # For eval purposes, it's bad news if we end up accidentally resuming a previous run
     # So we'll raise an exception if the output dir exists already
@@ -40,9 +41,9 @@ def fit_nerf_with_nerfstudio(nerf_data_path: Path, downscale_factor: Optional[in
 
     nerfstudio_args = {
         'data': nerf_data_path,
-        'pipeline.datamanager.camera-optimizer.mode': 'off',
+        'pipeline.model.camera-optimizer.mode': camera_optimizer,
         'pipeline.datamanager.images-on-gpu': str(preload_images),
-        'method-name': 'nerfacto',
+        'method-name': method,
         'experiment_name': 'nerf_for_eval',
         'output-dir': nerf_data_path,
         'timestamp': 'run',
@@ -55,7 +56,7 @@ def fit_nerf_with_nerfstudio(nerf_data_path: Path, downscale_factor: Optional[in
     }
 
     # Convert dict of args to list of strings
-    cmd = 'ns-train nerfacto ' + ' '.join([f'--{k} {v}' for k, v in nerfstudio_args.items()])
+    cmd = 'ns-train ' + method + ' ' + ' '.join([f'--{k} {v}' for k, v in nerfstudio_args.items()])
     cmd += ' nerfstudio-data ' + ' '.join([f'--{k} {v}' for k, v in dataparser_args.items()])
 
     # Execute

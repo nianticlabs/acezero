@@ -29,8 +29,11 @@ Table of contents:
       - [Refine Existing Poses](#refine-existing-poses)
       - [Start From a Partial Reconstruction](#start-from-a-partial-reconstruction)
       - [Self-Supervised Relocalization](#self-supervised-relocalization)
+      - [Train NeRF models or Gaussian splats](#train-nerf-models-or-gaussian-splats)
     - [Utility Scripts](#utility-scripts)
-- [Nerfacto Benchmark](#nerfacto-benchmark)
+- [Benchmark](#benchmark)
+  - [Nerfacto](#nerfacto)
+  - [Splatfacto](#splatfacto)
 - [Paper Experiments](#paper-experiments)
   - [7-Scenes](#7-scenes)
   - [Mip-NeRF 360](#mip-nerf-360)
@@ -41,7 +44,7 @@ Table of contents:
 ## Installation
 
 This code uses PyTorch and has been tested on Ubuntu 20.04 with a V100 Nvidia GPU, although it should reasonably run 
-with other Linux distributions and GPUs as well. Note our [FAQ](#faq) if you want to run ACE0 on GPUs with less memory. 
+with other Linux distributions and GPUs as well. Note our [FAQ](#frequently-asked-questions) if you want to run ACE0 on GPUs with less memory. 
 
 We provide a pre-configured [`conda`](https://docs.conda.io/en/latest/) environment containing all required dependencies
 necessary to run our code.
@@ -108,7 +111,7 @@ Camera poses are world-to-camera transformations, using the OpenCV camera conven
 `confidence` is the reliability of an estimate. 
 If the confidence is less than 1000, it should be treated as unreliable and possibly ignored.
 
-The pose files can be used e.g. to train a Nerfacto model, using our benchmarking scripts, see [Benchmarking](#nerfacto-benchmark).
+The pose files can be used e.g. to train a Nerfacto or Splatfacto model, using our benchmarking scripts, see [Benchmarking](#benchmark).
 Our benchmarking scripts also allow you to only convert our pose files to the format required by Nerfstudio, without running the benchmark itself.
 
 <details>
@@ -121,6 +124,7 @@ The result folder will contain files such as the following:
 - `poses_iterationX_preliminary.txt`: Poses of cameras after the mapping iteration but before relocalization. Contains poses refined by the MLP, rather than poses re-estimated by RANSAC. Output of `train_ace.py` in iteration X. 
 - `poses_iterationX.txt`: Final poses of iteration X, after relocalization, i.e. re-estimated by RANSAC. Output of `register_mapping.py` in iteration X.
 - `poses_final.txt`: The final poses of the images in the scene. Corresponds to the poses of the last relocalisation iteration, i.e. the output of the last `register_mapping.py` call.
+- `pc_final.ply`: An ACE0 point cloud of the scene, for visualisation or initialisation of Gaussian splats. This output is optional and triggered using the `--export_point_cloud True` option of `ace_zero.py`.
 </details>
 
 #### Setting Calibration Parameters
@@ -246,6 +250,10 @@ python eval_poses.py result_folder/poses_query.txt "/path/to/ground/truth/poses/
 
 More information about the evaluation script can be found under [Utility Scripts](#utility-scripts).
 
+#### Train NeRF models or Gaussian splats
+
+See [Benchmarking](#benchmark) for instructions on how to use Nerfstudio on top of ACE0.
+
 ### Utility Scripts
 
 #### Video to Dataset
@@ -266,9 +274,16 @@ We provide a script for exporting ACE point clouds from a network and a pose fil
 python export_point_cloud.py point_cloud_out.txt --network /path/to/ace_network.pt --pose_file /path/to/poses_final.txt
 ````
 
-The script will write the point cloud into a text file in the format `x y z r g b` per line for each point.
-This format can be imported into most 3D software, e.g. Meshlab, CloudCompare, etc.
+The script can either write out TXT of PLY files, decided by the file extension of the output file you specify. 
+If the output file has a .txt extension, the script will write the point cloud into a text file in the format `x y z r g b` per line for each point.
+If the output file has a .ply extension, the script will write the point cloud into a binary PLY file.
+Both formats can be imported into most 3D software, e.g. Meshlab, CloudCompare, etc.
+The PLY format is understood by Nerfstudio for initialisation of Gaussian splats.
 Note, you can also point the script to an existing visualization buffer, `result_folder/renderings/iterationX_mapping.pkl`, which already contains the point cloud so it does not have to be re-generated.
+
+Point clouds can be exported either using OpenGL or OpenCV coordinate conventions. Nerfstudio expects OpenCV coordinates.
+The script can extract sparse or dense point clouds. The sparse point clouds have more filters applied and look cleaner.
+The dense point clouds tend to work better for Gaussian splatting if you have a lot of images (2000+) as they cover more of the background. 
 
 #### Export Cameras as Mesh
 
@@ -296,7 +311,15 @@ By default, the script will calculate the percentage of poses below 5cm and 5 de
 Since ACE0 poses are only approximately metric and in an arbitrary reference frame, the script will fit a similarity transform between estimates and ground truth before calculating error.
 This behaviour can be disabled with the appropriate command line flags.
 
-## Nerfacto Benchmark
+## Benchmark
+
+We evaluate the ACE0 pose quality using novel view synthesis via Nerfstudio.
+
+**Note:** All paper results were produced with Nerfstudio v0.3.4. Since then, we updated this repository to support newer version of Nerfstudio.
+We verified that benchmark results did not change significantly when updating to Nerfstudio v1.1.4. 
+However, if you observe benchmarking inconsistencies w.r.t. the paper, we advise to first down-grade to Nerfstudio v0.3.4 and checkout our code using the "eccv_2024_checkpoint" git tag.
+
+### Nerfacto
 
 In our paper, we benchmark the ACE0 reconstruction by training a Nerfacto model and measuring PSNR on a dataset-specific training/test split of images.
 To setup the benchmark, follow the instructions in the [Benchmark README](benchmarks/README.md).
@@ -316,16 +339,31 @@ python scripts/show_benchmark_results.py /path/to/top/level/results/folder
 ```
 
 The script assumes a folder structure where each scene is a sub-folder in a dataset-specific top-level folder.
-E.g. `results_7scenes` contains sub-folders `chess`, `fire`, `heads`, etc.
+E.g. `benchmark/7scenes` contains sub-folders `chess`, `fire`, `heads`, etc.
 
-After running benchmarking on a reconstruction, you can also render a NeRF video using Nerfstudio's `ns-render` command. E.g.
+After running benchmarking on a reconstruction, you can load the NeRF model using Nerfstudio's viewer, render videos etc.
 
 ```shell
-ns-render interpolate --load-config /path/to/nerf/config.yaml --output-path /path/to/output/video.mp4  --pose-source eval
+ns-viewer --load-config /path/to/nerf/config.yaml
 ```
 
-This will render the NeRF reconstruction using interpolated query poses (every 8th image by default).
-If your images are not sequential, try ` --order-poses True`.
+### Splatfacto
+
+Training Gaussian splats with Splatfacto is very similar to training a Nerfacto model.
+Splatfacto additionally needs a point cloud to initialise the splats, which you can export using one of our [utility scripts](#export-3d-scene-as-point-cloud) or by running ACE0 with `--export_point_cloud True`.
+Our benchmarking scripts will look for a file `pc_final.ply` to pass to Nerfstudio.
+Note that Nerfstudio will also proceed if no `pc_final.ply` file is found, but the splats will be initialised uniformly which can result in very poor quality.
+You can check for the following warning in the Nerfstudio log to see if the point cloud was expected but missing:
+```
+Warning: load_3D_points set to true but no point cloud found.
+```
+
+Otherwise, you just have to run our benchmarking scripts with `--method splatfacto`, see the [Benchmark README](benchmarks/README.md) for details.
+The script `show_benchmark_results.py` mentioned in the previous section also has the `--method splatfacto` option to show benchmarking metrics of Splatfacto models.
+
+Note that all our scripts for the [Paper Experiments](#paper-experiments) support both Nerfacto and Splatfacto benchmarking.
+The method can just be toggled at the top of each script. 
+We recommend to take a look and use these scripts as blueprints for your own experiments.
 
 ## Paper Experiments
 
@@ -350,7 +388,7 @@ However, it is not required for the ACE0 experiments.
 (Optional for the benchmark) Create a benchmarking train/test split for the 7-Scenes dataset, see the [Benchmark README](benchmarks/README.md) for details.
 
 ```shell
-pyton scripts/create_splits_7scenes.py splits_files
+python scripts/create_splits_7scenes.py datasets/7scenes split_files
 ```
 
 Reconstruct each scene (corresponding to "ACE0" in Table 1, left).
@@ -359,13 +397,13 @@ Reconstruct each scene (corresponding to "ACE0" in Table 1, left).
 bash scripts/reconstruct_7scenes.sh
 ```
 
-By default, the script will run with benchmarking enabled (make sure you set it up, see [Nerfacto Benchmark](#nerfacto-benchmark)) and visualisation disabled. 
-Flip the appropriate flags in the script to change this behaviour. 
-The ACE0 reconstruction files will be stored in `results_7scenes` while the benchmarking results will be stored in `results_7scenes_benchmark`.
+By default, the script will run with benchmarking enabled (make sure you set it up, see [Nerfacto Benchmark](#benchmark)), using Nerfacto and with visualisation disabled. 
+Flip the appropriate flags in the script to change this behaviour, e.g. to train Gaussian splats instead of NeRF models. 
+The ACE0 reconstruction files will be stored in `reconstructions/7scenes` while the benchmarking results will be stored in `benchmark/7scenes`.
 To show the benchmarking results, call:
 
 ```shell
-python scripts/show_benchmark_results.py results_7scenes_benchmark
+python scripts/show_benchmark_results.py benchmark/7scenes
 ```
 
 To refine KinectFusion poses using ACE (corresponding to "KF+ACE0" in Table 1, left), run:
@@ -373,7 +411,7 @@ To refine KinectFusion poses using ACE (corresponding to "KF+ACE0" in Table 1, l
 ```shell
 bash scripts/reconstruct_7scenes_warmstart.sh
 # show the benchmark results
-python scripts/show_benchmark_results.py results_7scenes_warmstart_benchmark
+python scripts/show_benchmark_results.py benchmark/7scenes_warmstart
 ```
 
 Find pre-computed poses and reconstruction videos for 7-Scenes [here](https://storage.googleapis.com/niantic-lon-static/research/acezero/results_ace0_7scenes.tar.gz). 
@@ -400,7 +438,7 @@ The script can optionally convert the COLMAP ground truth to the ACE format, but
 This uses a slightly different 1/8 split than the default benchmark split.
 
 ```shell
-pyton scripts/create_splits_mip360.py splits_files
+python scripts/create_splits_mip360.py datasets/mip360 split_files
 ```
 
 Reconstruct each scene (corresponding to "ACE0" in Table 2 (b)).
@@ -409,13 +447,13 @@ Reconstruct each scene (corresponding to "ACE0" in Table 2 (b)).
 bash scripts/reconstruct_mip360.sh
 ```
 
-By default, the script will run with benchmarking enabled (make sure you set it up, see [Nerfacto Benchmark](#nerfacto-benchmark)) and visualisation disabled. 
-Flip the appropriate flags in the script to change this behaviour. 
-The ACE0 reconstruction files will be stored in `results_mip360` while the benchmarking results will be stored in `results_mip360_benchmark`.
+By default, the script will run with benchmarking enabled (make sure you set it up, see [Nerfacto Benchmark](#benchmark)), using Nerfacto and with visualisation disabled. 
+Flip the appropriate flags in the script to change this behaviour, e.g. to train Gaussian splats instead of NeRF models.  
+The ACE0 reconstruction files will be stored in `reconstructions/mip360` while the benchmarking results will be stored in `benchmark/mip360`.
 To show the benchmarking results, call:
 
 ```shell
-python scripts/show_benchmark_results.py results_mip360_benchmark
+python scripts/show_benchmark_results.py benchmark/mip360
 ```
 
 Find pre-computed poses and reconstruction videos for the Mip-NerF 360 dataset [here](https://storage.googleapis.com/niantic-lon-static/research/acezero/results_ace0_mip360.tar.gz). 
@@ -461,13 +499,13 @@ Reconstruct each scene from a few hundred images (corresponding to "ACE0" in Tab
 bash scripts/reconstruct_t2_training.sh
 ```
 
-By default, the script will run with benchmarking enabled (make sure you set it up, see [Nerfacto Benchmark](#nerfacto-benchmark)) and visualisation disabled. 
-Flip the appropriate flags in the script to change this behaviour. 
-The ACE0 reconstruction files will be stored in `results_t2_training` while the benchmarking results will be stored in `results_t2_training_benchmark`.
+By default, the script will run with benchmarking enabled (make sure you set it up, see [Nerfacto Benchmark](#benchmark)), using Nerfacto and with visualisation disabled. 
+Flip the appropriate flags in the script to change this behaviour, e.g. to train Gaussian splats instead of NeRF models. 
+The ACE0 reconstruction files will be stored in `reconstructions/t2_training` while the benchmarking results will be stored in `benchmark/t2_training`.
 To show the benchmarking results, call:
 
 ```shell
-python scripts/show_benchmark_results.py results_t2_training_benchmark
+python scripts/show_benchmark_results.py benchmark/t2_training
 ```
 
 Note that no benchmarking split files need to be generated for Tanks and Temples. 
@@ -477,14 +515,14 @@ To reconstruct the full videos of each scene (corresponding to "ACE0" in Table 3
 ```shell
 bash scripts/reconstruct_t2_training_videos.sh
 # show benchmarking results
-python scripts/show_benchmark_results.py results_t2_training_videos_benchmark
+python scripts/show_benchmark_results.py benchmark/t2_training_videos
 ```
 
 To reconstruct the full videos of each scene starting from a COLMAP reconstruction (corresponding to "Sparse COLMAP + ACE0" in Table 3, left), call:
 ```shell
 bash scripts/reconstruct_t2_training_videos_warmstart.sh
 # show benchmarking results
-python scripts/show_benchmark_results.py results_t2_training_videos_warmstart_benchmark
+python scripts/show_benchmark_results.py benchmark/t2_training_videos_warmstart
 ```
 
 Note that the last experiment assumes that you set up the dataset with `--with-colmap`.
@@ -496,6 +534,28 @@ Find pre-computed poses and reconstruction videos for Tanks and Temples here: [T
 These results are from a different run of ACE0 than the one we used for the paper results, but PSNR values are very close (&plusmn; 0.3dB PSNR on average).
 
 ## Frequently Asked Questions
+
+**Q: I want Gaussian splats from my images. What do I need to do?**
+
+Prepare ACE0 as explained in the beginning of this document: Create the ACE0 environment, compile the DSAC* bindings, and [setup Nerfstudio](benchmarks/README.md).
+Then, run the following commands on your image set:
+
+```
+# activate our conda environment
+conda activate ace0
+
+# run ACE0 reconstruction with point cloud export
+python ace_zero.py "/path/to/some/images/*.jpg" result_folder --export_point_cloud True
+
+# switch to the Nerfstudio conda environment
+conda activate nerfstudio
+
+# convert the ACE0 output to a Nerfstudio compatible format and run Splatfacto training (also runs evaluation but it's fast)
+python -m benchmarks.benchmark_poses --pose_file result_folder/poses_final.txt --output_dir benchmark_folder --images_glob_pattern "/path/to/some/images/*.jpg" --method splatfacto 
+
+# view the Gaussian splats
+ns-viewer --load-config benchmark_folder/nerf_data/nerf_for_eval/splatfacto/run/config.yaml
+```
 
 **Q: I run out of GPU memory during the ACE0 reconstruction. What can I do?**
 

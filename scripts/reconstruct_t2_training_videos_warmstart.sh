@@ -9,7 +9,9 @@ datasets_folder_sparse="datasets/t2_colmap/training"
 datasets_folder_video="datasets/t2/training_videos"
 
 # output directory for the reconstruction
-out_dir="results_t2_training_videos_warmstart"
+out_dir="reconstructions/t2_training_videos_warmstart"
+# target directory for benchmarking results
+benchmarking_out_dir="benchmark/t2_training_videos_warmstart"
 
 # render visualization of the reconstruction, slows down reconstruction considerably
 render_visualization=false
@@ -18,10 +20,13 @@ render_visualization=false
 run_benchmark=true
 # benchmarking needs to happen in the nerfstudio environment
 benchmarking_environment="nerfstudio"
-# target directory for benchmarking results
-benchmarking_out_dir="${out_dir}_benchmark"
+# benchmarking method, splatfacto or nerfacto
+benchmarking_method="nerfacto"
+# when using splatfacto, we need a point cloud initialization, either sparse or dense
+# dense is recommended if you have very dense coverage of the scene, eg. > 2000 images
+benchmarking_dense_pcinit=true
 
-scenes=("Barn" "Caterpillar" "Church" "Courthouse" "Ignatius" "Meetingroom" "Truck")
+scenes=("Barn" "Caterpillar" "Church" "Ignatius" "Meetingroom" "Truck") # "Courthouse"
 
 for scene in ${scenes[*]}; do
   # start with data from COLMAP, images and poses
@@ -34,10 +39,12 @@ for scene in ${scenes[*]}; do
   focal_length=$(cat ${calibration_file})
   echo "Using focal length from COLMAP stage: ${focal_length}"
 
-  if $render_visualization; then
-    visualization_cmd="--render_visualization True"
+  visualization_cmd="--render_visualization ${render_visualization}"
+
+  if ${run_benchmark} && [ "${benchmarking_method}" = "splatfacto" ]; then
+    export_pc_cmd="--export_point_cloud True --dense_point_cloud ${benchmarking_dense_pcinit}"
   else
-    visualization_cmd="--render_visualization False"
+    export_pc_cmd="--export_point_cloud False --dense_point_cloud False"
   fi
 
   mkdir -p ${scene_out_dir}
@@ -56,12 +63,12 @@ for scene in ${scenes[*]}; do
   echo "Adjusted focal length for video frames: ${focal_length}"
 
   # run ACE0 reconstruction starting with the network from the ACE mapping call
-  python $reconstruction_exe "${input_rgb_files_video}" ${scene_out_dir} --seed_network ${scene_out_dir}/${network_name}.pt  ${visualization_cmd} --use_external_focal_length ${focal_length} --refine_calibration False 2>&1 | tee ${scene_out_dir}/log_${scene}.txt
+  python $reconstruction_exe "${input_rgb_files_video}" ${scene_out_dir} --seed_network ${scene_out_dir}/${network_name}.pt  ${visualization_cmd} --use_external_focal_length ${focal_length} --refine_calibration False ${export_pc_cmd} 2>&1 | tee ${scene_out_dir}/log_${scene}.txt
 
   # run benchmarking if requested
   if $run_benchmark; then
     benchmarking_scene_dir="${benchmarking_out_dir}/${scene}"
     mkdir -p ${benchmarking_scene_dir}
-    conda run --no-capture-output -n ${benchmarking_environment} python -m benchmarks.benchmark_poses --pose_file ${scene_out_dir}/poses_final.txt --output_dir ${benchmarking_scene_dir} --images_glob_pattern "${input_rgb_files_video}" 2>&1 | tee ${benchmarking_out_dir}/log_${scene}.txt
+    conda run --no-capture-output -n ${benchmarking_environment} python -m benchmarks.benchmark_poses --pose_file ${scene_out_dir}/poses_final.txt --output_dir ${benchmarking_scene_dir} --images_glob_pattern "${input_rgb_files_video}" --method ${benchmarking_method} 2>&1 | tee ${benchmarking_out_dir}/log_${scene}.txt
   fi
 done

@@ -73,6 +73,14 @@ if __name__ == '__main__':
     parser.add_argument('--warmstart', type=_strtobool, default=True,
                         help="For each ACE0 mapping round, load the ACE weights of the last iteration.")
 
+    parser.add_argument('--export_point_cloud', type=_strtobool, default=False,
+                        help="Export the ACE0 point cloud after reconstruction, "
+                             "for visualisation or to initialise splats")
+
+    parser.add_argument('--dense_point_cloud', type=_strtobool, default=False,
+                        help='when exporting a point cloud, do not filter points based on reprojection error, '
+                             'bad for visualisation but good to initialise splats')
+
     # === Pose refinement ==================================================================================================
 
     parser.add_argument('--refinement', type=str, default="mlp", choices=['mlp', 'none', 'naive'],
@@ -167,7 +175,7 @@ if __name__ == '__main__':
     if opt.seed_network is not None:
         _logger.info(f"Using pre-trained network as seed: {opt.seed_network}")
         iteration_id = opt.seed_network.stem
-    else:
+    else:      
         # use individual images as seeds, try multiple and choose the one that registers the most images
         np.random.seed(opt.random_seed)
         seeds = np.random.uniform(size=opt.try_seeds)
@@ -364,6 +372,30 @@ if __name__ == '__main__':
     # copy pose estimates of the final iteration to output file
     final_pose_file = opt.results_folder / f"poses_{iteration_id}.txt"
     shutil.copy(final_pose_file, final_pose_file.parent / f"poses_final.txt")
+
+    # export point cloud if requested
+    if opt.export_point_cloud:
+        _logger.info("Exporting point cloud.")
+
+        if not opt.dense_point_cloud and opt.render_visualization:
+            vis_buffer_file = zutil.get_render_path(opt.results_folder) / f"{iteration_id}_mapping.pkl",
+            _logger.info(f"Exporting point cloud from visualisation buffer file: {vis_buffer_file}")
+
+            zutil.run_cmd(["./export_point_cloud.py",
+                           opt.results_folder / "pc_final.ply",
+                           "--visualization_buffer", vis_buffer_file,
+                           "--convention", "opencv",
+                           ])
+        else:
+            _logger.info(f"Exporting point cloud from last network and pose file.")
+
+            zutil.run_cmd(["./export_point_cloud.py",
+                           opt.results_folder / "pc_final.ply",
+                           "--network", opt.results_folder / f"{iteration_id}.pt",
+                           "--pose_file", opt.results_folder / f"poses_final.txt",
+                           "--convention", "opencv",
+                           "--dense_point_cloud", opt.dense_point_cloud,
+                           ])
 
     stats_report = "Time (min) | Iterations | Reg. Rate @500 | @1000 | @2000 | @4000\n"
     stats_report += f"{reconstruction_time / 60:.1f} " \

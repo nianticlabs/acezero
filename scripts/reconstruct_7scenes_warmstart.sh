@@ -2,11 +2,14 @@
 
 mapping_exe="train_ace.py"
 register_exe="register_mapping.py"
+export_pc_exe="export_point_cloud.py"
 
 # folder with image files
 datasets_folder="datasets/7scenes"
 # output directory for the reconstruction
-out_dir="results_7scenes_warmstart"
+out_dir="reconstructions/7scenes_warmstart"
+# target directory for benchmarking results
+benchmarking_out_dir="benchmark/7scenes_warmstart"
 
 # render visualization of the reconstruction, slows down reconstruction considerably
 render_visualization=false
@@ -15,8 +18,12 @@ render_visualization=false
 run_benchmark=true
 # benchmarking needs to happen in the nerfstudio environment
 benchmarking_environment="nerfstudio"
-# target directory for benchmarking results
-benchmarking_out_dir="${out_dir}_benchmark"
+# benchmarking method, splatfacto or nerfacto
+benchmarking_method="nerfacto"
+# when using splatfacto, we need a point cloud initialization, either sparse or dense
+# dense is recommended if you have very dense coverage of the scene, eg. > 2000 images
+benchmarking_dense_pcinit=true
+
 # 7Scenes comes with a pre-defined train/test split, split files expected in this folder
 # generate using create_7scenes_split.py
 benchmarking_split_folder="split_files"
@@ -65,6 +72,17 @@ for scene in ${scenes[*]}; do
   if $run_benchmark; then
     benchmarking_scene_dir="${benchmarking_out_dir}/${scene}"
     mkdir -p ${benchmarking_scene_dir}
-    conda run --no-capture-output -n ${benchmarking_environment} python -m benchmarks.benchmark_poses --pose_file ${scene_out_dir}/poses_final.txt --output_dir ${benchmarking_scene_dir} --images_glob_pattern "${input_rgb_files}" --split_json ${benchmarking_split_folder}/7scenes_${scene}.json 2>&1 | tee ${benchmarking_out_dir}/log_${scene}.txt
+
+    # when using splatfacto for benchmarking, export point cloud
+    if [ "${benchmarking_method}" = "splatfacto" ]; then
+      # if visualisation is enabled, we can export the sparse point cloud from the existing visualisation buffer
+      if ${render_visualization} && ! ${benchmarking_dense_pcinit}; then
+        python ${export_pc_exe} ${scene_out_dir}/pc_final.ply --visualization_buffer ${scene_out_dir}/renderings/${network_name}_mapping.pkl --convention opencv
+      else
+        python ${export_pc_exe} ${scene_out_dir}/pc_final.ply --network ${scene_out_dir}/${network_name}.pt --pose_file ${scene_out_dir}/poses_final.txt --convention opencv --dense_point_cloud ${benchmarking_dense_pcinit}
+      fi
+    fi
+
+    conda run --no-capture-output -n ${benchmarking_environment} python -m benchmarks.benchmark_poses --pose_file ${scene_out_dir}/poses_final.txt --output_dir ${benchmarking_scene_dir} --images_glob_pattern "${input_rgb_files}" --split_json ${benchmarking_split_folder}/7scenes_${scene}.json --method ${benchmarking_method} 2>&1 | tee ${benchmarking_out_dir}/log_${scene}.txt
   fi
 done

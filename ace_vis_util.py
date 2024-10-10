@@ -428,13 +428,14 @@ def get_retro_colors():
     return retroColorMap(np.linspace(0, 1, 257))[1:, :3]
 
 
-def get_point_cloud_from_network(network, data_loader, filter_depth):
+def get_point_cloud_from_network(network, data_loader, filter_depth, dense_cloud=False):
     """
     Extract a point cloud from a fully trained network.
 
     @param network: scene coordinate regression network
     @param data_loader: loader for the mapping sequence
     @param filter_depth: in meters, remove points further from the camera
+    @param dense_cloud: if True, return all points (good to initialise splats), otherwise filter based on repro error
     @return: tuple, N3 coordinates + N3 RGB colors
     """
 
@@ -449,6 +450,11 @@ def get_point_cloud_from_network(network, data_loader, filter_depth):
 
     # remove points with re-projection larger than threshold (in px) as long as we keep a min number of points
     repro_threshold = 1
+
+    if dense_cloud:
+        # disable checks to return random points per image
+        grad_thresholds = [torch.inf]
+        repro_threshold = torch.inf
 
     pc_points_per_image_min = int(pc_points_min / len(data_loader))
     pc_points_per_image_max = int(pc_points_max / len(data_loader))

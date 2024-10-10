@@ -9,7 +9,8 @@ from benchmarks.run_nerfstudio import eval_nerf_with_nerfstudio, fit_nerf_with_n
 
 def run_benchmark(pose_file: Path, images_glob_pattern: str, working_dir: Path, split_json: Optional[Path] = None,
                   dry_run: bool = False, ns_train_extra_args: Optional[Dict] = None,
-                  downscale_factor_override: Optional[int] = None) -> Optional[Path]:
+                  downscale_factor_override: Optional[int] = None, method: str = 'nerfacto',
+                  max_resolution: int = 640, camera_optimizer: str = 'off') -> Optional[Path]:
     """
     Top-level function to benchmark poses by fitting a NeRF.
 
@@ -21,6 +22,9 @@ def run_benchmark(pose_file: Path, images_glob_pattern: str, working_dir: Path, 
     :param dry_run: If True, then don't actually invoke nerfstudio (useful for debugging)
     :param ns_train_extra_args: Extra arguments to pass to nerfstudio's ns-train command
     :param downscale_factor_override: If not None, then override the downscale factor that would be used
+    :param method: The method to use for fitting the NeRF
+    :param max_resolution: The maximum resolution to use for images
+    :param camera_optimizer: The camera optimizer mode to use
 
     :return: Path to the eval json containing metrics such as PSNR. Will be None iff dry_run is True.
     """
@@ -58,7 +62,7 @@ def run_benchmark(pose_file: Path, images_glob_pattern: str, working_dir: Path, 
     print('Downscale factor override is', downscale_factor_override)
     if downscale_factor_override is None:
         downscale_factor = calculate_downscale_factor(transforms_json_path=nerf_data_path / 'transforms.json',
-                                                      max_resolution=640)
+                                                      max_resolution=max_resolution)
     else:
         downscale_factor = downscale_factor_override
     if downscale_factor > 1:
@@ -78,7 +82,9 @@ def run_benchmark(pose_file: Path, images_glob_pattern: str, working_dir: Path, 
     fitted_nerf_path = fit_nerf_with_nerfstudio(nerf_data_path=nerf_data_path,
                                                 downscale_factor=downscale_factor,
                                                 preload_images=preload_images,
-                                                ns_train_extra_args=ns_train_extra_args)
+                                                ns_train_extra_args=ns_train_extra_args,
+                                                method=method,
+                                                camera_optimizer=camera_optimizer)
 
     # Evaluate PSNR and other metrics
     print('Evaluating...')

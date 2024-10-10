@@ -1,3 +1,4 @@
+import shutil
 from dataclasses import dataclass
 import glob
 import json
@@ -109,6 +110,15 @@ def convert_ace_zero_to_nerf_blender_format(poses_path: Path, images_glob_patter
         **make_filenames_json(split_frames=split_frames),
     }
     assert len(transforms_json['train_filenames']) > 0, 'No train filenames! Must have at least one'
+
+    # Check whether there is a ACE point cloud file, and if so, copy it to the output directory
+    point_cloud_file = poses_path.parent / 'pc_final.ply'
+    if point_cloud_file.exists():
+        print('Copying point cloud file', point_cloud_file, 'to', output_path)
+        shutil.copy(point_cloud_file, output_path / 'pc_final.ply')
+
+        # Add point cloud file to the transforms.json file
+        transforms_json['ply_file_path'] = 'pc_final.ply'
 
     print('Writing transforms.json to', output_path / 'transforms.json')
     with open(output_path / 'transforms.json', 'w') as f:

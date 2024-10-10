@@ -1,6 +1,5 @@
 #! /usr/bin/env python3
 
-import os.path
 import pickle
 from distutils.util import strtobool
 
@@ -24,7 +23,8 @@ def _strtobool(x):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
-        description='Extract point cloud from network (slow) or visualization buffer file (fast).',
+        description='Extract point cloud from network (slow) or visualization buffer file (fast). '
+                    'File ending determines output format where txt and ply are supported.',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('output_file', type=Path)
@@ -43,10 +43,21 @@ if __name__ == '__main__':
 
     parser.add_argument('--confidence_threshold', type=int, default=500)
 
+    parser.add_argument('--convention', type=str, default='opengl', choices=['opengl', 'opencv'],
+                        help='coordinate convention of the point cloud')
+
+    parser.add_argument('--dense_point_cloud', type=_strtobool, default=False,
+                        help='do not filter points based on reprojection error, '
+                             'bad for visualisation but good to initialise splats')
+
     opt = parser.parse_args()
 
     if opt.visualization_buffer is None and (opt.network is None or opt.pose_file is None):
         parser.error("You must provide either a visualization buffer or network and pose file.")
+
+    if opt.dense_point_cloud and opt.visualization_buffer is not None:
+        parser.error("A dense cloud cannot be extracted from a visualization buffer. "
+                     "Please provide network and pose file.")
 
     device = torch.device("cuda")
 
@@ -79,7 +90,8 @@ if __name__ == '__main__':
         # Setup dataloader. Batch size 1 by default.
         data_loader = DataLoader(dataset, shuffle=False, num_workers=6)
 
-        pc_xyz, pc_clr = vutil.get_point_cloud_from_network(network, data_loader, filter_depth=100)
+        pc_xyz, pc_clr = vutil.get_point_cloud_from_network(network, data_loader,
+                                                            filter_depth=100, dense_cloud=opt.dense_point_cloud)
 
     else:
         _logger.info("Extracting point cloud from visualization buffer.")
@@ -90,9 +102,27 @@ if __name__ == '__main__':
         pc_xyz = state_dict['map_xyz']
         pc_clr = state_dict['map_clr']
 
-    with open(opt.output_file.with_suffix(".txt"), 'w') as f:
-        for pt in range(pc_xyz.shape[0]):
-            f.write(f"{pc_xyz[pt, 0]} {pc_xyz[pt, 1]} {pc_xyz[pt, 2]} "
-                    f"{pc_clr[pt, 0]:.0f} {pc_clr[pt, 1]:.0f} {pc_clr[pt, 2]:.0f}\n")
+    if opt.convention == 'opencv':
+        # OpenGL to OpenCV convention
+        pc_xyz[:, 1] = -pc_xyz[:, 1]
+        pc_xyz[:, 2] = -pc_xyz[:, 2]
+
+    if opt.output_file.suffix == '.txt':
+
+        # write as txt file (ascii)
+        with open(opt.output_file, 'w') as f:
+            for pt in range(pc_xyz.shape[0]):
+                f.write(f"{pc_xyz[pt, 0]} {pc_xyz[pt, 1]} {pc_xyz[pt, 2]} "
+                        f"{pc_clr[pt, 0]:.0f} {pc_clr[pt, 1]:.0f} {pc_clr[pt, 2]:.0f}\n")
+
+    elif opt.output_file.suffix == '.ply':
+        # write as ply (binary) via trimesh
+        import trimesh
+
+        cloud = trimesh.PointCloud(pc_xyz, colors=pc_clr)
+        cloud.export(opt.output_file)
+
+    else:
+        raise ValueError(f"Output file format {opt.output_file.suffix} not supported.")
 
     _logger.info(f"Done. Wrote point cloud to: {opt.output_file}")

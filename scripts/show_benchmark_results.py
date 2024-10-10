@@ -6,14 +6,16 @@ from pathlib import Path
 # Parse command line argument for folder name
 parser = argparse.ArgumentParser()
 parser.add_argument("folder", type=Path,
-                    help="Folder containing Nerfacto bechmark results with subfolders for each scene.")
+                    help="Folder containing Nerfstudio bechmark results with subfolders for each scene.")
+parser.add_argument("--method", type=str, default='nerfacto', choices=['nerfacto', 'splatfacto'],
+                    help="Method of Nerfstudio used for benchmarking.")
 args = parser.parse_args()
 
 # metrics to report from the eval.json file
 keys = ['psnr', 'ssim', 'lpips']
 
 # get list of scenes as sub folders of benchmarking folder
-scene_folders = [f for f in args.folder.iterdir() if f.is_dir()]
+scene_folders = sorted([f for f in args.folder.iterdir() if f.is_dir()])
 
 # Print header
 header_str = "Scene: "
@@ -24,7 +26,7 @@ print(header_str)
 # Loop through scenes of dataset
 for scene_folder in scene_folders:
     # Specify result file
-    result_file = scene_folder / 'nerf_data/nerf_for_eval/nerfacto/run/eval.json'
+    result_file = scene_folder / f'nerf_data/nerf_for_eval/{args.method}/run/eval.json'
 
     # Assemble an output string with the benchmarking results
     out_str = scene_folder.name + ": "

@@ -4,7 +4,11 @@ This module allows you to benchmark the quality of some poses by training a NeRF
 
 ## Requirements
 
-You must have Nerfstudio installed; follow the instructions [here](https://docs.nerf.studio/quickstart/installation.html) to do this. We used Nerfstudio v0.3.4.
+You must have Nerfstudio installed; follow the instructions [here](https://docs.nerf.studio/quickstart/installation.html) to do this. 
+
+**Note:** All paper results were produced with Nerfstudio v0.3.4. Since then, we updated this repository to support newer version of Nerfstudio.
+We verified that benchmark results did not change significantly when updating to Nerfstudio v1.1.4. 
+However, if you observe benchmarking inconsistencies w.r.t. the paper, we advise to first down-grade to Nerfstudio v0.3.4 and checkout our code using the "eccv_2024_checkpoint" git tag.
 
 ## Running the benchmark
 
@@ -34,6 +38,8 @@ and possibly an images directory containing downsampled images (if downsampling 
 If not given, a default split will be used in which every 8th frame (after sorting them alphabetically on their paths) will form the test set.
 
 `--no_run_nerfstudio`: Optional argument. If given, will stop after generating Nerfstudio inputs without actually running Nerfstudio or conducting the evaluation. Useful if you just want to convert your ACE0-format pose file to Nerfstudio input format, rather than evaluating the pose quality.
+
+`--method`: Optional argument. Pass `splatfacto`if you want to train Gaussian splats instead of the default Nerfacto model. For a splatfacto model, the benchmarking scripts will be looking for a point cloud file `pc_final.ply` in the same folder as the pose file. This file can be generated using `ace_zero.py` with the `--export_point_cloud True` option or the utility script `export_point_cloud.py`.
 
 After the eval runs, there will be an evaluation JSON in the output dir containing PSNR (and other metrics). The output structure is quite nested:
 `$OUTPUT_DIR/nerf_data/nerf_for_eval/nerfacto/run/eval.json`
