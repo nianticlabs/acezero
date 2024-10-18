@@ -229,7 +229,8 @@ if __name__ == '__main__':
         "--hypotheses", opt.ransac_iterations,
         "--threshold", opt.ransac_threshold,
         "--image_resolution", opt.image_resolution,
-        "--num_data_workers", opt.num_data_workers
+        "--num_data_workers", opt.num_data_workers,
+        "--hypotheses_max_tries", 16
     ]
     zutil.run_cmd(reg_cmd)
 
@@ -288,7 +289,8 @@ if __name__ == '__main__':
             "--image_resolution", opt.image_resolution,
             "--hypotheses", opt.ransac_iterations,
             "--threshold", opt.ransac_threshold,
-            "--num_data_workers", opt.num_data_workers
+            "--num_data_workers", opt.num_data_workers,
+            "--hypotheses_max_tries", 16
         ]
 
         # Get current focal length estimate from the pose file of the previous mapping iteration

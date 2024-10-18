@@ -3,9 +3,9 @@
 
 import os
 
-os.environ["MKL_NUM_THREADS"] = "1"  # noqa: E402
+os.environ["MKL_NUM_THREADS"] = "12"  # noqa: E402
 os.environ["NUMEXPR_NUM_THREADS"] = "1"  # noqa: E402
-os.environ["OMP_NUM_THREADS"] = "1"  # noqa: E402
+os.environ["OMP_NUM_THREADS"] = "12"  # noqa: E402
 os.environ["OPENBLAS_NUM_THREADS"] = "1"  # noqa: E402
 
 import dataset_io
@@ -63,6 +63,9 @@ if __name__ == '__main__':
     # DSACStar RANSAC parameters. ACE Keeps them at default.
     parser.add_argument('--hypotheses', '-hyps', type=int, default=64,
                         help='number of hypotheses, i.e. number of RANSAC iterations')
+
+    parser.add_argument('--hypotheses_max_tries', type=int, default=1000000,
+                        help='number of re-tries if a sampled hypothesis is invalid')
 
     parser.add_argument('--threshold', '-t', type=float, default=10,
                         help='inlier threshold in pixels (RGB) or centimeters (RGB-D)')
@@ -234,7 +237,8 @@ if __name__ == '__main__':
                     opt.inlieralpha,
                     opt.maxpixelerror,
                     network.OUTPUT_SUBSAMPLE,
-                    opt.base_seed
+                    opt.base_seed,
+                    opt.hypotheses_max_tries
                 )
 
                 # Store estimates.

@@ -254,7 +254,8 @@ def map_seed(args):
         "--threshold", opt.ransac_threshold,
         "--max_estimates", 1000, # scoring using a subset of images for large datasets
         "--image_resolution", opt.image_resolution,
-        "--num_data_workers", num_seed_workers
+        "--num_data_workers", num_seed_workers,
+        "--hypotheses_max_tries", 16
     ]
     run_cmd(scoring_cmd, verbose=verbose)
 

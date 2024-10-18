@@ -5,6 +5,9 @@ This module allows you to benchmark the quality of some poses by training a NeRF
 ## Requirements
 
 You must have Nerfstudio installed; follow the instructions [here](https://docs.nerf.studio/quickstart/installation.html) to do this. 
+We recommend to install Nerfstudio in its own Conda environment as described in their installation instructions.
+Firstly, this prevents library conflicts between Nerfstudio and ACE0.
+Secondly, our benchmarking scripts assume that Nerfstudio lives in an environment called `nerfstudio`.
 
 **Note:** All paper results were produced with Nerfstudio v0.3.4. Since then, we updated this repository to support newer version of Nerfstudio.
 We verified that benchmark results did not change significantly when updating to Nerfstudio v1.1.4. 

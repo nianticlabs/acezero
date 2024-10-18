@@ -45,7 +45,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "dsacstar_derivative.h"
 
 #define MAX_REF_STEPS 100 // max pose refienment iterations
-#define MAX_HYPOTHESES_TRIES 16 // repeat sampling x times hypothesis if hypothesis is invalid
+//#define MAX_HYPOTHESES_TRIES 16 // repeat sampling x times hypothesis if hypothesis is invalid
 
 /**
  * @brief Estimate a camera pose based on a scene coordinate prediction
@@ -59,6 +59,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * @param inlierAlpha Alpha parameter for soft inlier counting.
  * @param maxReproj Reprojection errors are clamped above this value (px).
  * @param subSampling Sub-sampling  of the scene coordinate prediction wrt the input image.
+ * @param randomSeed External random seed to make sure we draw different samples across calls of this function.
+ * @param max_hypotheses_tries Number of times to repeat sampling if hypothesis is invalid.
  * @return The number of inliers for the output pose.
  */
 int dsacstar_rgb_forward(
@@ -72,7 +74,8 @@ int dsacstar_rgb_forward(
 	float inlierAlpha,
 	float maxReproj,
 	int subSampling,
-	int randomSeed)
+	int randomSeed,
+	int max_hypotheses_tries)
 {
 	ThreadRand::init(randomSeed);
 
@@ -109,7 +112,7 @@ int dsacstar_rgb_forward(
 		sampling,
 		camMat,
 		ransacHypotheses,
-		MAX_HYPOTHESES_TRIES,
+		max_hypotheses_tries,
 		inlierThreshold,
 		hypotheses,
 		sampledPoints,
