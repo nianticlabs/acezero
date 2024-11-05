@@ -90,7 +90,7 @@ You can then shell into the container with the following command:
 docker exec -it acezero /bin/bash
 ```
 
-From there you can follow the Gaussian Splatting tutorial described at the bottom of the README [here.](#frequently-asked-questions) Make sure to add your images to the volume definded in ```docker-compose.yml```
+From there you can follow the Gaussian Splatting tutorial described at the bottom of the README [here.](#frequently-asked-questions) Make sure to add your images to the volume defined in ```docker-compose.yml```
 
 ## Usage
 
