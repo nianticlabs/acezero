@@ -10,9 +10,7 @@ services:
     tty: true
     stdin_open: true
     ports:
-      - "7771:7007"
-    volumes:
-      - ./images:/workspace/images
+      - "7007:7007"
     deploy:
       resources:
         reservations:
