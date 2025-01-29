@@ -76,6 +76,22 @@ See [this link](https://github.com/isl-org/ZoeDepth) for its license and details
 ACE0 uses that model to estimate the depth for the seed images.
 It can be replaced, please see the [FAQ](#frequently-asked-questions) section below for details.
 
+## Docker
+
+If you would prefer to run Ace0 in a docker container, you can start it with:
+
+```shell  
+docker-compose up -d 
+```
+
+You can then shell into the container with the following command: 
+
+```shell  
+docker exec -it acezero /bin/bash
+```
+
+From there you can follow the Gaussian Splatting tutorial described at the bottom of the README [here.](#frequently-asked-questions) Make sure to add your images to the volume defined in ```docker-compose.yml```
+
 ## Usage
 
 We explain how to run ACE0 to reconstruct images from scratch, with and without knowledge about the image intrinsics.
