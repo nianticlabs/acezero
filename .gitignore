@@ -16,3 +16,7 @@ split_files/
 results_*/
 
 images/
+
+# pixi environments
+.pixi/*
+!.pixi/config.toml
